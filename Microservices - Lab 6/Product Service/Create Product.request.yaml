@@ -1,0 +1,13 @@
+$kind: http-request
+url: http://localhost:3002/products
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "Laptop",
+        "price": 1200
+    }
+order: 1000
