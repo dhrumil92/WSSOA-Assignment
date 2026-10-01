@@ -1,9 +1,18 @@
-const express = require('express');
+﻿const express = require('express');
+const promMiddleware = require('express-prometheus-middleware');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const morgan = require('morgan');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(promMiddleware({
+  metricsPath: '/metrics',
+  collectDefaultMetrics: true,
+  requestDurationBuckets: [0.1, 0.5, 1, 1.5, 2, 5],
+  requestLengthBuckets: [512, 1024, 5120, 10240, 51200, 102400],
+  responseLengthBuckets: [512, 1024, 5120, 10240, 51200, 102400],
+}));
 
 app.use(morgan('dev'));
 
@@ -35,3 +44,5 @@ app.use('/orders', createProxyMiddleware(proxyOptions(process.env.ORDER_SERVICE_
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API Gateway listening on port ${PORT}`);
 });
+
+

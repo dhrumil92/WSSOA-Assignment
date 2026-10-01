@@ -1,0 +1,34 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: lab8
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: campusconnect-api-gateway:latest
+        imagePullPolicy: Never
+        command: ["/bin/sh", "-c"]
+        args: ["npm install express-prometheus-middleware prom-client && node server.js"]
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: app-config
+        volumeMounts:
+        - name: metrics-code
+          mountPath: /app/server.js
+          subPath: server.js
+      volumes:
+      - name: metrics-code
+        configMap:
+          name: api-gateway-metrics-code
