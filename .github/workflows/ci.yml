@@ -1,0 +1,11 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Build all Docker images using Docker Compose
+      - name: Build Docker Images
+        run: docker compose build
