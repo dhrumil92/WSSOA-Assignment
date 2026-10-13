@@ -37,7 +37,53 @@ To deploy this architecture to a cloud provider (e.g., Render, Railway):
 4. Expose only the API Gateway to the public internet. 
 5. Test the public URL using Postman.
 
+## Local vs Cloud Architecture
+
+| Layer | Local (Docker Compose) | Cloud (Render / Railway) |
+| :--- | :--- | :--- |
+| **Entry** | Postman / Browser / React | Internet client / Postman |
+| **Gateway** | API Gateway container (`:3000`) | Public API Gateway URL |
+| **Network** | Docker bridge network (`campus-network`) | Internal / private network |
+| **Services** | User, Product, Order (service names) | User, Product, Order (platform internal URLs) |
+| **Database** | MongoDB Atlas / Local MongoDB container | MongoDB Atlas (managed cloud cluster) |
+
+*Key Principle*: What stays the same is application code, routes, and API contracts. What changes is where it runs, how service URLs are resolved via environment variables, and public exposure of the gateway.
+
+## Local vs Cloud Service URLs
+
+| Environment | Service URL Example |
+| :--- | :--- |
+| **Local Docker Compose** | `http://user-service:3001` |
+| **Cloud Internal Service** | Platform-provided internal URL / hostname (e.g. `http://user-service.internal:3001`) |
+| **Public API** | `https://campusconnect-gateway.onrender.com` |
+
+Service locations are strictly externalized into configuration (`USER_SERVICE_URL`, `PRODUCT_SERVICE_URL`, `ORDER_SERVICE_URL`) rather than hardcoded in application logic. The same container image runs locally and in the cloud simply by switching environment variables.
+
+## Hands-on Exercise: Gateway Failure & Recovery Test
+
+To demonstrate centralized error handling at the API Gateway:
+1. **Start all services:** Run `docker compose up -d` (gateway, user-service, product-service, order-service).
+2. **Normal call:** Send `GET /users` (or `GET /users/101`) through the gateway (`http://localhost:3000/users`). Confirm HTTP `200 OK`.
+3. **Simulate failure:** Stop the User Service (`docker stop user-service`).
+4. **Repeat request:** Re-send `GET /users` through the gateway.
+5. **Verify 503 response:** The API Gateway intercepts the connection refusal via `http-proxy-middleware`'s error handler and returns a clean `503 Service Unavailable` JSON response instead of hanging or crashing:
+   ```json
+   {
+     "message": "Service Unavailable",
+     "error": "The requested service is currently unreachable."
+   }
+   ```
+6. **Verify recovery:** Restart User Service (`docker start user-service`) and re-send the request. Confirm the system automatically recovers and returns HTTP `200 OK`.
+
+## MongoDB Atlas & Secrets Management
+- All database connection credentials and secrets are managed via platform environment variables (`MONGODB_URI`).
+- Connection strings containing passwords are never committed to the GitHub repository.
+
 ## Troubleshooting Notes
 **Issue**: Receiving `503 Service Unavailable` when calling `/orders`.
 **Cause**: The Order service depends on the User and Product services. When using `depends_on` in Docker Compose, the Order service might start before the User/Product services are fully ready to accept connections.
 **Resolution**: We utilized the custom error handling in our `http-proxy-middleware` inside the API Gateway to catch connection errors and gracefully return a `503` JSON response instead of crashing the Node.js proxy server. Wait a few seconds and the services will recover.
+
+## Written Reflection (Lab 6 vs. Lab 7)
+Introducing the API Gateway and cloud deployment significantly modernized how our system is operated compared to Lab 6. In Lab 6, clients had to maintain direct knowledge of every individual microservice port, creating tight coupling and exposing internal network details. With Lab 7, clients interact solely through a single, unified entry point that transparently handles routing, CORS, logging, and graceful 503 degradation when downstream services fail. Furthermore, externalizing service URLs into environment variables allowed our identical Docker images to seamlessly transition from local Docker Compose to cloud deployment on Render without modifying a single line of application source code.
+

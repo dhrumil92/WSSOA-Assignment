@@ -1,10 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const morgan = require('morgan');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors()); // Enable CORS for browser (React) clients
 app.use(morgan('dev'));
 
 app.get('/health', (req, res) => {
