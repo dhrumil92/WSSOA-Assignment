@@ -31,6 +31,10 @@ function validateUser(data) {
     return errors;
 }
 
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'User Service is running' });
+});
+
 app.get("/users", async (req, res) => {
     try {
         const users = await User.find();

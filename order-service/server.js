@@ -17,6 +17,10 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('Connected to MongoDB OrderDB'))
     .catch(err => console.error('Could not connect to MongoDB', err));
 
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'Order Service is running' });
+});
+
 app.get("/orders", async (req, res) => {
     try {
         const orders = await Order.find();

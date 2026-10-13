@@ -29,6 +29,10 @@ function validateProduct(data) {
     return errors;
 }
 
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'Product Service is running' });
+});
+
 app.get("/products", async (req, res) => {
     try {
         const products = await Product.find();

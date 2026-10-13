@@ -19,6 +19,21 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3002
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 5
+          periodSeconds: 10
         env:
         - name: MONGODB_URI
-          value: "mongodb+srv://202512088_db_user:7WGLZwHj98byShzI@cluster0.a8mct.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: MONGODB_URI

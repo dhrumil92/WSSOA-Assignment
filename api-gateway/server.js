@@ -1,4 +1,5 @@
-﻿const express = require('express');
+const express = require('express');
+const cors = require('cors');
 const promMiddleware = require('express-prometheus-middleware');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const morgan = require('morgan');
@@ -6,6 +7,7 @@ const morgan = require('morgan');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors()); // Enable CORS for clients
 app.use(promMiddleware({
   metricsPath: '/metrics',
   collectDefaultMetrics: true,
